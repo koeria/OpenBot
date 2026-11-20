@@ -23,9 +23,11 @@ function headerSafeFilename(name: string): string {
   })
     .join("")
     .trim();
-  // Keep the fallback and RFC 5987 form bounded. A filename is a label, not a transport for an
-  // unbounded path.
-  return Array.from(cleaned).slice(0, 255).join("") || "download";
+  // Replace unpaired UTF-16 surrogates with replacement character (U+FFFD) so that
+  // rfc5987Encode() never receives an invalid string and encodeURIComponent() never throws.
+  const safe = cleaned.replace(/[\uD800-\uDFFF]/g, '�')
+    .slice(0, 255);
+  return safe || "download";
 }
 
 function asciiFallback(name: string): string {
